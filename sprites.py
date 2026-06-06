@@ -17,6 +17,8 @@ class Bullet(arcade.Sprite):
 
 class Player(arcade.Sprite):
   def update(self, *args, **kwargs):
+    super().update(*args, **kwargs)
+    
     if self.left < 0:
       self.left = 0
     elif self.right > SCREEN_WIDTH:

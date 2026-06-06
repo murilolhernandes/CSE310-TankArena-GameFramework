@@ -41,7 +41,7 @@ class TankArena(arcade.Window):
 
   def spawn_player(self):
     """ Spawns the player at a random safe location """
-    self.player_sprite = arcade.Sprite("assets/TankAsset/Tank_Swamp_67x108.png", 1)
+    self.player_sprite = Player("assets/TankAsset/Tank_Swamp_67x108.png", 1)
     self.player_sprite.health = 5
 
     place_sprite_safely(self.player_sprite, self.wall_list)
