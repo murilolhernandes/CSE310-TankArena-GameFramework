@@ -1,12 +1,8 @@
 import arcade
-import math
 import random
-
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 800
-SCREEN_TITLE = "Tank Arena"
-MOVEMENT_SPEED = 5
-BULLET_SPEED = 10
+from constants import * 
+from utils import calculate_aiming_data, create_wall_hitboxed, place_sprite_safely
+from sprites import Bullet, Player
 
 class TankArena(arcade.Window):
   def __init__(self):
@@ -27,32 +23,11 @@ class TankArena(arcade.Window):
 
   def setup(self):
     self.player_list = arcade.SpriteList()
-    self.bullet_list = arcade.SpriteList()
+    self.player_bullet_list = arcade.SpriteList()
+    self.enemy_bullet_list = arcade.SpriteList()
     self.enemy_list = arcade.SpriteList()
-    self.wall_list = arcade.SpriteList()
+    self.wall_list = create_wall_hitboxed()
     self.explosion_list = arcade.SpriteList()
-
-    car_hitbox1 = arcade.SpriteSolidColor(90, 270, arcade.color.BRIGHT_GREEN)
-    car_hitbox1.center_x = 420
-    car_hitbox1.center_y = 190
-    car_hitbox1.angle = -15
-    car_hitbox1.alpha = 100
-
-    car_hitbox2 = arcade.SpriteSolidColor(140, 100, arcade.color.BLACK)
-    car_hitbox2.center_x = 300
-    car_hitbox2.center_y = 200
-    car_hitbox2.angle = -25
-    car_hitbox2.alpha = 100
-
-    car_hitbox3 = arcade.SpriteSolidColor(200, 85, arcade.color.BLACK)
-    car_hitbox3.center_x = 825
-    car_hitbox3.center_y = 475
-    car_hitbox3.angle = 45
-    car_hitbox3.alpha = 100
-
-    self.wall_list.append(car_hitbox1)
-    self.wall_list.append(car_hitbox2)
-    self.wall_list.append(car_hitbox3)
 
     self.spawn_player()
     self.respawn_timer = 0
@@ -62,40 +37,26 @@ class TankArena(arcade.Window):
 
     self.background = arcade.load_texture("assets/S0L-Fallout-VTTPack/Fallout-Maps/FOMAP (18)-ups-FAV.webp")
 
+    self.game_over = False
+
   def spawn_player(self):
     """ Spawns the player at a random safe location """
     self.player_sprite = arcade.Sprite("assets/TankAsset/Tank_Swamp_67x108.png", 1)
     self.player_sprite.health = 5
 
-    is_safe = False
+    place_sprite_safely(self.player_sprite, self.wall_list)
 
-    while not is_safe:
-      self.player_sprite.center_x = random.randint(100, SCREEN_WIDTH - 100)
-      self.player_sprite.center_y = random.randint(100, SCREEN_HEIGHT - 100)
-
-      hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.wall_list)
-
-      if len(hit_list) == 0:
-        is_safe = True
-
-      self.player_list.append(self.player_sprite)
+    self.player_list.append(self.player_sprite)
 
 
   def spawn_enemy(self):
     """ Creates a new enemy at a random safe location """
     enemy = arcade.Sprite("assets/TankAsset/Tank_Brown_67x108.png", 1)
-    enemy.health = 3
+    enemy.health = 5
 
-    is_safe = False
+    enemy.fire_timer = 1.5
 
-    while not is_safe:
-      enemy.center_x = random.randint(100, SCREEN_WIDTH - 100)
-      enemy.center_y = random.randint(100, SCREEN_HEIGHT - 100)
-
-      hit_list = arcade.check_for_collision_with_list(enemy, self.wall_list)
-
-      if len(hit_list) == 0:
-        is_safe = True
+    place_sprite_safely(enemy, self.wall_list)
 
     self.enemy_list.append(enemy)
 
@@ -112,12 +73,84 @@ class TankArena(arcade.Window):
 
     self.player_list.draw()
     self.enemy_list.draw()
-    self.bullet_list.draw()
+    self.player_bullet_list.draw()
+    self.enemy_bullet_list.draw()
     self.explosion_list.draw()
 
+    if self.game_over:
+      arcade.draw_text("GAME OVER", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 30,
+                       arcade.color.RED, 64, anchor_x="center")
+
+      arcade.draw_text("Press SPACEBAR to Restart", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 40,
+                       arcade.color.WHITE, 24, anchor_x="center")
+
   def on_update(self, delta_time):
+    if self.game_over:
+      for explosion in self.explosion_list:
+        explosion.lifetime -= delta_time
+        if explosion.lifetime <= 0:
+          explosion.remove_from_sprite_lists()
+
+      return
+    
     self.physics_engine.update()
-    self.bullet_list.update()
+    self.player_list.update()
+    self.player_bullet_list.update()
+    self.enemy_bullet_list.update()
+
+    for enemy in self.enemy_list:
+      enemy.fire_timer -= delta_time
+
+      if enemy.fire_timer <= 0:
+        arcade.play_sound(self.fire_sound)
+        enemy_bullet = Bullet("assets/TankAsset/GenericProjectile.png", 1, self.miss_sound)
+        enemy_bullet.color = arcade.color.RED
+
+        enemy_bullet.center_x = enemy.center_x
+        enemy_bullet.center_y = enemy.center_y
+
+        enemy_bullet.angle, enemy_bullet.change_x, enemy_bullet.change_y = calculate_aiming_data(
+          enemy.center_x,
+          enemy.center_y,
+          self.player_sprite.center_x,
+          self.player_sprite.center_y,
+          BULLET_SPEED
+        )
+
+        self.enemy_bullet_list.append(enemy_bullet)
+
+        enemy.fire_timer = 1.5
+
+    for bullet in self.enemy_bullet_list:
+      wall_hit_list = arcade.check_for_collision_with_list(bullet, self.wall_list)
+      if len(wall_hit_list) > 0:
+        bullet.remove_from_sprite_lists()
+
+        arcade.play_sound(self.miss_sound)
+
+        continue
+
+      if arcade.check_for_collision(bullet, self.player_sprite):
+        bullet.remove_from_sprite_lists()
+        self.player_sprite.health -= 1
+
+        if self.player_sprite.health <= 0:
+          explosion = arcade.Sprite("assets/explosion.png", 0.2)
+          explosion.center_x = self.player_sprite.center_x
+          explosion.center_y = self.player_sprite.center_y
+
+          explosion.lifetime = 0.2
+
+          self.explosion_list.append(explosion)
+
+          self.player_sprite.remove_from_sprite_lists()
+          arcade.play_sound(self.explode_sound)
+
+          self.game_over = True
+
+          return
+        else:
+          arcade.play_sound(self.hit_sound)
 
     if self.respawn_timer > 0:
       self.respawn_timer -= delta_time
@@ -132,17 +165,7 @@ class TankArena(arcade.Window):
       if explosion.lifetime <= 0:
         explosion.remove_from_sprite_lists()
 
-    if self.player_sprite.left < 0:
-      self.player_sprite.left = 0
-    elif self.player_sprite.right > SCREEN_WIDTH:
-      self.player_sprite.right = SCREEN_WIDTH
-
-    if self.player_sprite.bottom < 0:
-      self.player_sprite.bottom = 0
-    elif self.player_sprite.top > SCREEN_HEIGHT:
-      self.player_sprite.top = SCREEN_HEIGHT
-
-    for bullet in self.bullet_list:
+    for bullet in self.player_bullet_list:
       enemy_hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_list)
 
       if len(enemy_hit_list) > 0:
@@ -177,40 +200,44 @@ class TankArena(arcade.Window):
 
         continue
 
-      if (bullet.bottom > SCREEN_HEIGHT or bullet.top < 0 or 
-          bullet.right < 0 or bullet.left > SCREEN_WIDTH):
-        bullet.remove_from_sprite_lists()
-        arcade.play_sound(self.miss_sound)
+      # if (bullet.bottom > SCREEN_HEIGHT or bullet.top < 0 or 
+      #     bullet.right < 0 or bullet.left > SCREEN_WIDTH):
+      #   bullet.remove_from_sprite_lists()
+      #   arcade.play_sound(self.miss_sound)
 
   def on_mouse_motion(self, x, y, dx, dy):
     """ Called whenever the mouse moves over the window """
-    diff_x = x - self.player_sprite.center_x
-    diff_y = y - self.player_sprite.center_y
+    if self.game_over:
+      return
+    
+    angle, _, _ = calculate_aiming_data(
+      self.player_sprite.center_x,
+      self.player_sprite.center_y,
+      x, y, 0
+    )
 
-    angle_in_radians = math.atan2(diff_y, diff_x)
-
-    angle_in_degress = math.degrees(angle_in_radians)
-
-    self.player_sprite.angle = 90 - angle_in_degress
+    self.player_sprite.angle = angle
 
   def on_mouse_press(self, x, y, button, modifiers):
     """ Called whenever the mouse button is clicked """
+    if self.game_over:
+      return
+    
     arcade.play_sound(self.fire_sound)
-    bullet = arcade.Sprite("assets/TankAsset/GenericProjectile.png", 1)
+    bullet = Bullet("assets/TankAsset/GenericProjectile.png", 1, self.miss_sound)
 
     bullet.center_x = self.player_sprite.center_x
     bullet.center_y = self.player_sprite.center_y
 
-    diff_x = x - self.player_sprite.center_x
-    diff_y = y - self.player_sprite.center_y
-    angle_in_radians = math.atan2(diff_y, diff_x)
+    bullet.angle, bullet.change_x, bullet.change_y = calculate_aiming_data(
+      self.player_sprite.center_x,
+      self.player_sprite.center_y,
+      x,
+      y,
+      BULLET_SPEED
+    )
 
-    bullet.angle = 90 - math.degrees(angle_in_radians)
-
-    bullet.change_x = math.cos(angle_in_radians) * BULLET_SPEED
-    bullet.change_y = math.sin(angle_in_radians) * BULLET_SPEED
-
-    self.bullet_list.append(bullet)
+    self.player_bullet_list.append(bullet)
 
   def on_key_press(self, key, modifiers):
     if key == arcade.key.W or key == arcade.key.UP:
