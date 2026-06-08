@@ -39,6 +39,8 @@ class TankArena(arcade.Window):
 
     self.game_over = False
 
+    self.score = 0
+
   def spawn_player(self):
     """ Spawns the player at a random safe location """
     self.player_sprite = Player("assets/TankAsset/Tank_Swamp_67x108.png", 1)
@@ -76,6 +78,20 @@ class TankArena(arcade.Window):
     self.player_bullet_list.draw()
     self.enemy_bullet_list.draw()
     self.explosion_list.draw()
+
+    if not self.game_over:
+      arcade.draw_text(f"HP: {self.player_sprite.health} / 5", 20, SCREEN_HEIGHT - 30,
+                  arcade.color.WHITE, 18, bold=True)
+
+      arcade.draw_lbwh_rectangle_filled(20, SCREEN_HEIGHT - 60, 200, 20, arcade.color.DARK_RED)
+
+      health_width = (self.player_sprite.health / 5) * 200
+
+      if health_width > 0:
+        arcade.draw_lbwh_rectangle_filled(20, SCREEN_HEIGHT - 60, health_width, 20, arcade.color.GREEN)
+
+      arcade.draw_text(f"SCORE: {self.score}", SCREEN_WIDTH - 20, SCREEN_HEIGHT - 40,
+                       arcade.color.GOLD, 24, bold=True, anchor_x="right")
 
     if self.game_over:
       arcade.draw_text("GAME OVER", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 30,
@@ -175,6 +191,7 @@ class TankArena(arcade.Window):
           enemy.health -= 1
 
           if enemy.health <= 0:
+            self.score += 100
             explosion = arcade.Sprite("assets/explosion.png", 0.2)
             explosion.center_x = enemy.center_x
             explosion.center_y = enemy.center_y
