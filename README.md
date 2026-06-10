@@ -12,7 +12,7 @@ As a software developer building my skills in backend architecture and logic sys
 * Press **Spacebar** to restart after a Game Over.
 * Press **ESC** to close the game.
 
-[Software Demo Video - Project Walkthrough](http://youtube.link.goes.here)
+[Software Demo Video - Project Walkthrough](https://www.youtube.com/watch?v=7_AnW7nN8qE)
 
 # Development Environment
 * **IDE:** Visual Studio Code

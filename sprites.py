@@ -1,7 +1,6 @@
 import arcade
 from constants import *
 import math
-import random
 from utils import calculate_aiming_data
 
 class Bullet(arcade.Sprite):

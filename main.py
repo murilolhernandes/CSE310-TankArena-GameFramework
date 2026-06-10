@@ -1,5 +1,4 @@
 import arcade
-import random
 from constants import * 
 from utils import calculate_aiming_data, create_wall_hitboxed, place_sprite_safely
 from sprites import Bullet, Player, Enemy
@@ -240,8 +239,6 @@ class TankArena(arcade.Window):
 
             enemy.remove_from_sprite_lists()
             arcade.play_sound(self.explode_sound)
-
-            # self.respawn_timer = 3.0
           else:
             arcade.play_sound(self.hit_sound)
       
