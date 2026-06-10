@@ -2,7 +2,7 @@ import arcade
 import random
 from constants import * 
 from utils import calculate_aiming_data, create_wall_hitboxed, place_sprite_safely
-from sprites import Bullet, Player
+from sprites import Bullet, Player, Enemy
 
 class TankArena(arcade.Window):
   def __init__(self):
@@ -53,12 +53,11 @@ class TankArena(arcade.Window):
 
   def spawn_enemy(self):
     """ Creates a new enemy at a random safe location """
-    enemy = arcade.Sprite("assets/TankAsset/Tank_Brown_67x108.png", 1)
-    enemy.health = 5
-
-    enemy.fire_timer = 1.5
-
+    enemy = Enemy("assets/TankAsset/Tank_Brown_67x108.png", 1)
+    
     place_sprite_safely(enemy, self.wall_list)
+
+    enemy.physics_engine = arcade.PhysicsEngineSimple(enemy, self.wall_list)
 
     self.enemy_list.append(enemy)
 
@@ -115,6 +114,10 @@ class TankArena(arcade.Window):
     self.enemy_bullet_list.update()
 
     for enemy in self.enemy_list:
+      enemy.follow_player(self.player_sprite, self.wall_list)
+
+      enemy.physics_engine.update()
+
       enemy.fire_timer -= delta_time
 
       if enemy.fire_timer <= 0:
@@ -191,7 +194,7 @@ class TankArena(arcade.Window):
           enemy.health -= 1
 
           if enemy.health <= 0:
-            self.score += 100
+            self.score += 10
             explosion = arcade.Sprite("assets/explosion.png", 0.2)
             explosion.center_x = enemy.center_x
             explosion.center_y = enemy.center_y

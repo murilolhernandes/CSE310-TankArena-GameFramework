@@ -1,5 +1,8 @@
 import arcade
 from constants import *
+import math
+import random
+from utils import calculate_aiming_data
 
 class Bullet(arcade.Sprite):
   def __init__(self, filename, scale, miss_sound):
@@ -28,3 +31,33 @@ class Player(arcade.Sprite):
       self.bottom = 0
     elif self.top > SCREEN_HEIGHT:
       self.top = SCREEN_HEIGHT
+
+class Enemy(arcade.Sprite):
+  def __init__(self, filename, scale):
+    super().__init__(filename, scale)
+
+    self.health = 5
+    self.fire_timer = 1.5
+    self.speed = 1
+
+  def follow_player(self, player_sprite, wall_list):
+    """ Smart AI: Calculate the angle to the player and drive towards them, while dodging walls """
+    target_angle, dx, dy = calculate_aiming_data(
+      self.center_x, self.center_y,
+      player_sprite.center_x, player_sprite.center_y,
+      self.speed
+    )
+
+    look_ahead_x = self.center_x + (dx * 10)
+    look_ahead_y = self.center_y + (dy * 10)
+
+    for wall in wall_list:
+      distance = math.dist((look_ahead_x, look_ahead_y), (wall.center_x, wall.center_y))
+
+      if distance < 50:
+        dx -= (wall.center_x - self.center_x) * 0.1
+        dy -= (wall.center_y - self.center_y) * 0.1
+
+    self.change_x = dx
+    self.change_y = dy
+    self.angle = 90 - math.degrees(math.atan2(self.change_y, self.change_x))
