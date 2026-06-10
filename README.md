@@ -1,30 +1,35 @@
 # Overview
 
-{Important!  Do not say in this section that this is college assignment.  Talk about what you are trying to accomplish as a software engineer to further your learning.}
+## Description:
+As a software developer building my skills in backend architecture and logic systems, I wrote this software to challenge my understanding of Object-Oriented Programming (OOP), state machines, and game loop architecture. Managing continuous state updates, vector-based AI steering, and strict separation of concerns (keeping physics logic separate from rendering logic) provided an excellent environment to practice writing clean, maintainable, and highly coupled code.
 
-{Provide a description the game that you wrote. Describe how to play your game.}
+**Tank Arena** is a 2D top-down arcade survival shooter. The objective is to survive endless waves of enemy tanks for as long as possible. As your score increases, the game automatically scales in difficulty by increasing the number of enemies and their firing speeds.
 
-{Describe your purpose for writing this software.}
+## **How to Play:**
+* Use the **W, A, S, D** or **Arrow Keys** to drive your tank.
+* Use the **Mouse** to aim your turret and **Left-Click** to fire.
+* Use the environment (rusted cars) for cover.
+* Press **Spacebar** to restart after a Game Over.
+* Press **ESC** to close the game.
 
-{Provide a link to your YouTube demonstration.  It should be a 4-5 minute demo of the game being played and a walkthrough of the code.}
-
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video - Project Walkthrough](http://youtube.link.goes.here)
 
 # Development Environment
+* **IDE:** Visual Studio Code
+* **Version Control:** Git / GitHub
 
-{Describe the tools that you used to develop the software}
-
-{Describe the programming language that you used and any libraries.}
+* **Programming Language:** Python 3
+* **Primary Library:** Arcade (Used for window management, 2D rendering, collision detection via `PhysicsEngineSimple`, and audio playback).
+* **Standard Libraries:** `math` (used for vector calculations and AI steering behavior) and `random` (used for procedural safe-spawning).
 
 # Useful Websites
 
-{Make a list of websites that you found helpful in this project}
-* [Web Site Name](http://url.link.goes.here)
-* [Web Site Name](http://url.link.goes.here)
+* [Python Arcade Library Official Documentation](https://api.arcade.academy/en/latest/)
+* [Python `math` Module Documentation](https://docs.python.org/3/library/math.html)
+* [Understanding Steering Behaviors for AI](https://natureofcode.com/autonomous-agents/)
 
 # Future Work
 
-{Make a list of things that you need to fix, improve, and add in the future.}
-* Item 1
-* Item 2
-* Item 3
+* Implement a more robust A* (A-Star) pathfinding algorithm or Navigation Mesh to allow enemy AI to navigate highly complex, closed-in mazes without relying solely on repulsion vectors.
+* Integrate a local database (such as SQLite) or file saving system to permanently persist the player's High Score across different application sessions.
+* Introduce a power-up system (e.g., wrench icons to restore health, or stars for temporary rapid-fire) that utilizes timed lifespan variables similar to the explosion animations.

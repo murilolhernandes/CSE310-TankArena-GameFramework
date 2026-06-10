@@ -6,11 +6,13 @@ from utils import calculate_aiming_data
 
 class Bullet(arcade.Sprite):
   def __init__(self, filename, scale, miss_sound):
+    """ Initializes the Bullet sprite with a specified texture, scale, and miss sound. """
     super().__init__(filename, scale)
 
     self.miss_sound = miss_sound
 
   def update(self, *args, **kwargs):
+    """ Updates the bullet's position and removes it if it flies off-screen. """
     super().update(*args, **kwargs)
 
     if (self.bottom > SCREEN_HEIGHT or self.top < 0 or
@@ -20,6 +22,7 @@ class Bullet(arcade.Sprite):
 
 class Player(arcade.Sprite):
   def update(self, *args, **kwargs):
+    """ Updates the player's position and prevents them from leaving the screen bounds. """
     super().update(*args, **kwargs)
     
     if self.left < 0:
@@ -34,6 +37,7 @@ class Player(arcade.Sprite):
 
 class Enemy(arcade.Sprite):
   def __init__(self, filename, scale):
+    """ Initializes the Enemy tank sprite with standard attributes like health and fire rate. """
     super().__init__(filename, scale)
 
     self.health = 5
